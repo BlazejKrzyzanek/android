@@ -1,0 +1,6 @@
+<resources>
+    <string name="app_name">OSPS</string>
+    <string name="slowo">Słowo</string>
+    <string name="sprawdz">SPRAWDŹ</string>
+    <string name="anagramuj">ANAGRAMUJ</string>
+</resources>
