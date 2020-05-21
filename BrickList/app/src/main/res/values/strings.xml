@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">BrickList</string>
+    <string name="settings">Settings</string>
+    <string name="title_activity_settings">Settings</string>
+    <string name="title_activity_new_project">New project</string>
+
+    <!-- Preferences -->
+    <string name="url_prefix">Prefix of URL</string>
+    <string name="archive_title">Show archived</string>
+
+</resources>
