@@ -10,6 +10,9 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
+            android:name=".ProjectActivity"
+            android:label="@string/title_activity_project" />
+        <activity
             android:name=".NewProjectActivity"
             android:label="@string/title_activity_new_project" />
         <activity
