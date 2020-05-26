@@ -2,6 +2,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <EditTextPreference
+        android:id="@+id/urlPrefix"
         app:key="Prefix of URL"
         app:title="@string/url_prefix"
         app:defaultValue="http://fcds.cs.put.poznan.pl/MyWeb/BL/"

@@ -7,8 +7,8 @@
 
     <ImageView
         android:id="@+id/imageView"
-        android:layout_width="100dp"
-        android:layout_height="100dp"
+        android:layout_width="120dp"
+        android:layout_height="120dp"
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
         app:layout_constraintStart_toStartOf="parent"
@@ -32,40 +32,69 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="24dp"
         android:text="Brick code"
-        app:layout_constraintBottom_toTopOf="@id/countBrick"
+        app:layout_constraintBottom_toTopOf="@id/quantityInStore"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@id/imageView"
         app:layout_constraintTop_toBottomOf="@id/brickName" />
 
     <TextView
-        android:id="@+id/countBrick"
-        android:layout_width="0dp"
+        android:id="@+id/quantityInStore"
+        android:layout_width="wrap_content"
         android:layout_height="19dp"
         android:layout_marginStart="24dp"
-        android:text="0 of 0"
+        android:text="0"
         android:textStyle="bold"
-        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@id/imageView"
         app:layout_constraintTop_toBottomOf="@id/brickCode" />
 
+    <TextView
+        android:id="@+id/of"
+        android:layout_width="0dp"
+        android:layout_height="19dp"
+        android:layout_marginStart="4dp"
+        android:text="of"
+        android:textStyle="bold"
+        app:layout_constraintStart_toEndOf="@id/quantityInStore"
+        app:layout_constraintTop_toBottomOf="@id/brickCode" />
+
+    <TextView
+        android:id="@+id/quantityInSet"
+        android:layout_width="wrap_content"
+        android:layout_height="19dp"
+        android:layout_marginStart="4dp"
+        android:text="0"
+        android:textStyle="bold"
+        app:layout_constraintStart_toEndOf="@id/of"
+        app:layout_constraintTop_toBottomOf="@id/brickCode" />
+
     <Button
-        android:id="@+id/remove"
+        android:id="@+id/minusButton"
         style="@android:style/Widget.Material.Light.Button.Borderless"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:text="-"
-        app:layout_constraintEnd_toStartOf="@+id/add"
+        app:layout_constraintEnd_toStartOf="@+id/plusButton"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/imageView" />
 
     <Button
-        android:id="@+id/add"
+        android:id="@+id/plusButton"
         style="@android:style/Widget.Material.Button.Borderless"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="+"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@id/remove" />
+        app:layout_constraintStart_toEndOf="@id/minusButton" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:background="@color/colorAccentLight"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/plusButton" />
 </androidx.constraintlayout.widget.ConstraintLayout>
