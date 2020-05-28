@@ -14,6 +14,7 @@ import com.example.bricklist.database.BrickListContract.InventoriesParts
 import com.example.bricklist.database.BrickListContract.ItemTypes
 import com.example.bricklist.database.BrickListContract.Parts
 import com.example.bricklist.database.model.InventoryPartTO
+import com.example.bricklist.database.model.InventoryPartViewTO
 import com.example.bricklist.database.model.InventoryTO
 import com.example.bricklist.database.model.PartTO
 import java.io.ByteArrayOutputStream
@@ -258,6 +259,39 @@ class DataHelper(private val context: Context) :
                 cursor.getInt(5),
                 cursor.getInt(6),
                 cursor.getInt(7)
+            )
+
+            resultInventoryPartList.add(inventoryPart)
+            cursor.moveToNext()
+        }
+
+        cursor.close()
+        return resultInventoryPartList
+    }
+
+    fun findInventoryPartsViews(id: Int): ArrayList<InventoryPartViewTO> {
+        var inventoryPart: InventoryPartViewTO
+        val resultInventoryPartList = ArrayList<InventoryPartViewTO>()
+        val cursor =
+            db!!.rawQuery(
+                "SELECT InventoriesParts.ID, InventoryID, InventoriesParts.TypeID, InventoriesParts.ItemID, QuantityInSet, QuantityInStore, InventoriesParts.ColorID, Extra, Parts.Name, Parts.Code, Codes.Image FROM InventoriesParts JOIN Parts ON InventoriesParts.ItemID = Parts.id JOIN Codes ON Parts.id = Codes.ItemID AND InventoriesParts.ColorID = Codes.ColorID WHERE InventoryID = ?",
+                arrayOf(id.toString())
+            )
+        cursor.moveToFirst()
+
+        while (!cursor.isAfterLast) {
+            inventoryPart = InventoryPartViewTO(
+                cursor.getInt(0),
+                cursor.getInt(1),
+                cursor.getInt(2),
+                cursor.getInt(3),
+                cursor.getInt(4),
+                cursor.getInt(5),
+                cursor.getInt(6),
+                cursor.getInt(7),
+                cursor.getString(8),
+                cursor.getString(9),
+                cursor.getBlob(10)
             )
 
             resultInventoryPartList.add(inventoryPart)

@@ -1,6 +1,7 @@
 package com.example.bricklist
 
 import android.content.Intent
+import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
@@ -68,13 +69,9 @@ class ProjectActivity : AppCompatActivity() {
         dbHelper.openDatabase()
         val inventoryId =
             dbHelper.findInventoryByName(intent.getStringExtra("EXTRA_PROJECT_NAME")).id
-        val bricks = dbHelper.findInventoryParts(inventoryId)
-
+        val bricks = dbHelper.findInventoryPartsViews(inventoryId)
         for (brick in bricks) {
             val rowLayout = layoutInflater.inflate(R.layout.project_item_row, layout, false)
-            val bitmap = dbHelper.getImageOfBrick(brick.itemId, brick.colorId)
-            val nameOfBrick = dbHelper.getNameOfBrick(brick.itemId, brick.colorId)
-            val codeFromParts = dbHelper.getCodeFromParts(brick.itemId)
 
             val brickImageView: ImageView = rowLayout.findViewById(R.id.imageView)
             val brickNameView: TextView = rowLayout.findViewById(R.id.brickName)
@@ -84,9 +81,17 @@ class ProjectActivity : AppCompatActivity() {
             val plusButton: Button = rowLayout.findViewById(R.id.plusButton)
             val minusButton: Button = rowLayout.findViewById(R.id.minusButton)
 
-            brickImageView.setImageBitmap(bitmap)
-            brickNameView.text = nameOfBrick
-            brickCodeView.text = codeFromParts
+            if (brick.image != null)
+                brickImageView.setImageBitmap(
+                    BitmapFactory.decodeByteArray(
+                        brick.image,
+                        0,
+                        brick.image!!.size
+                    )
+                )
+
+            brickNameView.text = brick.name
+            brickCodeView.text = brick.code
             quantityInSetView.text = brick.quantityInSet.toString()
             quantityInStoreView.text = brick.quantityInStore.toString()
 
