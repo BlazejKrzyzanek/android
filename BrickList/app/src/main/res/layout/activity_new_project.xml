@@ -43,7 +43,7 @@
         android:layout_marginTop="16dp"
         android:layout_marginEnd="16dp"
         android:onClick="addClicked"
-
+        android:background="@color/colorPrimary"
         android:text="@string/add"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

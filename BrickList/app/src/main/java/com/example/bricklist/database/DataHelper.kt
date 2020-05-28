@@ -13,10 +13,7 @@ import com.example.bricklist.database.BrickListContract.Inventories
 import com.example.bricklist.database.BrickListContract.InventoriesParts
 import com.example.bricklist.database.BrickListContract.ItemTypes
 import com.example.bricklist.database.BrickListContract.Parts
-import com.example.bricklist.database.model.InventoryPartTO
-import com.example.bricklist.database.model.InventoryPartViewTO
-import com.example.bricklist.database.model.InventoryTO
-import com.example.bricklist.database.model.PartTO
+import com.example.bricklist.database.model.*
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
@@ -29,7 +26,7 @@ class DataHelper(private val context: Context) :
 
     companion object {
         private const val DB_NAME = "BrickList.db"
-        private const val DB_VERSION = 67
+        private const val DB_VERSION = 100
     }
 
     fun openDatabase() {
@@ -147,7 +144,7 @@ class DataHelper(private val context: Context) :
     }
 
     fun isInventoryWithNameInDatabase(projectName: String): Boolean {
-        val query = "SELECT * FROM ${Inventories.TABLE_NAME} WHERE ${Inventories.NAME} LIKE \"?\""
+        val query = "SELECT * FROM ${Inventories.TABLE_NAME} WHERE ${Inventories.NAME} = ?"
         val cursor = db!!.rawQuery(query, arrayOf(projectName))
         val moveToFirst = cursor.moveToFirst()
         cursor.close()
@@ -157,8 +154,8 @@ class DataHelper(private val context: Context) :
 
     fun findInventoryByName(projectName: String?): InventoryTO {
         val query =
-            "SELECT * FROM ${Inventories.TABLE_NAME} WHERE ${Inventories.NAME} LIKE \"$projectName\""
-        val cursor = db!!.rawQuery(query, null)
+            "SELECT * FROM ${Inventories.TABLE_NAME} WHERE ${Inventories.NAME} = ?"
+        val cursor = db!!.rawQuery(query, arrayOf(projectName))
 
         val project = InventoryTO()
         with(cursor) {
@@ -236,26 +233,22 @@ class DataHelper(private val context: Context) :
         )
     }
 
-    fun findInventoryParts(id: Int): ArrayList<InventoryPartTO> {
-        var inventoryPart: InventoryPartTO
-        val resultInventoryPartList = ArrayList<InventoryPartTO>()
+    fun findMissingInventoryParts(projectName: String): ArrayList<InventoryPartToExportTO> {
+        var inventoryPart: InventoryPartToExportTO
+        val resultInventoryPartList = ArrayList<InventoryPartToExportTO>()
         val cursor =
             db!!.rawQuery(
-                "SELECT * FROM InventoriesParts WHERE InventoryID = ?",
-                arrayOf(id.toString())
+                "SELECT ItemTypes.Code, InventoriesParts.ItemID, Colors.Code, InventoriesParts.QuantityInSet, InventoriesParts.QuantityInStore FROM InventoriesParts JOIN ItemTypes ON InventoriesParts.TypeID = ItemTypes.id JOIN Colors ON InventoriesParts.ColorID = Colors.id JOIN Inventories ON InventoriesParts.InventoryID = Inventories.id  WHERE QuantityInStore < QuantityInSet AND Inventories.Name = ?",
+                arrayOf(projectName)
             )
         cursor.moveToFirst()
 
         while (!cursor.isAfterLast) {
-            inventoryPart = InventoryPartTO(
-                cursor.getInt(0),
+            inventoryPart = InventoryPartToExportTO(
+                cursor.getString(0),
                 cursor.getInt(1),
                 cursor.getInt(2),
-                cursor.getInt(3),
-                cursor.getInt(4),
-                cursor.getInt(5),
-                cursor.getInt(6),
-                cursor.getInt(7)
+                cursor.getInt(3) - cursor.getInt(4)
             )
 
             resultInventoryPartList.add(inventoryPart)
@@ -266,9 +259,9 @@ class DataHelper(private val context: Context) :
         return resultInventoryPartList
     }
 
-    fun findInventoryPartsViews(id: Int): ArrayList<InventoryPartViewTO> {
+    fun findInventoryPartsViews(id: Int): ArrayList<InventoryPartViewTO?> {
         var inventoryPart: InventoryPartViewTO
-        val resultInventoryPartList = ArrayList<InventoryPartViewTO>()
+        val resultInventoryPartList = ArrayList<InventoryPartViewTO?>()
         val cursor =
             db!!.rawQuery(
                 "SELECT InventoriesParts.ID, InventoryID, InventoriesParts.TypeID, InventoriesParts.ItemID, QuantityInSet, QuantityInStore, InventoriesParts.ColorID, Extra, Parts.Name, Parts.Code, Codes.Image FROM InventoriesParts JOIN Parts ON InventoriesParts.ItemID = Parts.id JOIN Codes ON Parts.id = Codes.ItemID AND InventoriesParts.ColorID = Codes.ColorID WHERE InventoryID = ?",
@@ -532,8 +525,8 @@ class DataHelper(private val context: Context) :
 
     fun deleteInventory(projectName: String?) {
         val cursor = db!!.rawQuery(
-            "SELECT ${Inventories.ID} FROM ${Inventories.TABLE_NAME} WHERE ${Inventories.NAME} LIKE \"$projectName\"",
-            null
+            "SELECT ${Inventories.ID} FROM ${Inventories.TABLE_NAME} WHERE ${Inventories.NAME} LIKE \"?\"",
+            arrayOf(projectName)
         )
 
         if (cursor.moveToFirst()) {

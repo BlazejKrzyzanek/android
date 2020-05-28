@@ -21,5 +21,10 @@
     <string name="send">SEND</string>
     <string name="default_email">Default email address</string>
     <string name="filenameAndEmail">Filename and email can\'t be empty.</string>
+    <string name="any">Any</string>
+    <string name="only_new">Only new</string>
+    <string name="only_used">Only used</string>
+    <string name="limit_condition_to">Limit condition to:</string>
+    <string name="save_file_as">Save file as:</string>
 
 </resources>

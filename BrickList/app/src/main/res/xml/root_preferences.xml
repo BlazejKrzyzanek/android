@@ -13,11 +13,4 @@
         app:key="archive"
         app:title="@string/archive_title" />
 
-    <EditTextPreference
-        android:id="@+id/email"
-        app:key="defaultEmail"
-        app:title="@string/default_email"
-        app:defaultValue="default.email@mail.com"
-        app:useSimpleSummaryProvider="true" />
-
 </PreferenceScreen>

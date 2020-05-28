@@ -1,25 +1,31 @@
 package com.example.bricklist
 
+import android.content.Context
 import android.content.Intent
 import android.graphics.BitmapFactory
 import android.os.Bundle
-import android.view.Menu
-import android.view.MenuItem
-import android.widget.*
+import android.view.*
+import android.widget.ArrayAdapter
+import android.widget.Button
+import android.widget.ImageView
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.example.bricklist.database.DataHelper
+import com.example.bricklist.database.model.InventoryPartViewTO
 import com.example.bricklist.database.model.InventoryTO
+import kotlinx.android.synthetic.main.activity_project.*
 
 
 class ProjectActivity : AppCompatActivity() {
 
     private var inventory: InventoryTO? = null
+    private var projectName: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_project)
 
-        val projectName = intent.getStringExtra("EXTRA_PROJECT_NAME")
+        projectName = intent.getStringExtra("EXTRA_PROJECT_NAME")
 
         title = projectName
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
@@ -34,7 +40,7 @@ class ProjectActivity : AppCompatActivity() {
         if (inventory == null) {
             val dbHelper = DataHelper(this)
             dbHelper.openDatabase()
-            inventory = dbHelper.findInventoryByName(intent.getStringExtra("EXTRA_PROJECT_NAME"))
+            inventory = dbHelper.findInventoryByName(projectName)
             dbHelper.close()
         }
 
@@ -51,15 +57,14 @@ class ProjectActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.action_save -> {
-                Toast.makeText(this, "SAVE", Toast.LENGTH_SHORT).show()
-
-                val intent = Intent(this, MainActivity::class.java)
+                val intent = Intent(this, SaveActivity::class.java)
+                intent.putExtra("EXTRA_PROJECT_NAME", projectName);
                 startActivity(intent)
             }
             R.id.action_remove -> {
                 val dbHelper = DataHelper(this)
                 dbHelper.openDatabase()
-                dbHelper.deleteInventory(intent.getStringExtra("EXTRA_PROJECT_NAME"))
+                dbHelper.deleteInventory(projectName)
                 dbHelper.close()
 
                 val intent = Intent(this, MainActivity::class.java)
@@ -68,7 +73,7 @@ class ProjectActivity : AppCompatActivity() {
             R.id.action_archive -> {
                 val dbHelper = DataHelper(this)
                 dbHelper.openDatabase()
-                dbHelper.archiveInventory(intent.getStringExtra("EXTRA_PROJECT_NAME"))
+                dbHelper.archiveInventory(projectName!!)
                 dbHelper.close()
 
                 val intent = Intent(this, MainActivity::class.java)
@@ -91,70 +96,81 @@ class ProjectActivity : AppCompatActivity() {
     }
 
     private fun displayBricks() {
-        val layout: LinearLayout = findViewById(R.id.listOfBricks)
-        layout.removeAllViews()
 
         val dbHelper = DataHelper(this)
-
         dbHelper.openDatabase()
-        if (inventory == null)
-            inventory = dbHelper.findInventoryByName(intent.getStringExtra("EXTRA_PROJECT_NAME"))
+        if (inventory == null) inventory = dbHelper.findInventoryByName(projectName)
         val inventoryId = inventory!!.id
         val bricks = dbHelper.findInventoryPartsViews(inventoryId)
-        for (brick in bricks) {
-            val rowLayout = layoutInflater.inflate(R.layout.project_item_row, layout, false)
-
-            val brickImageView: ImageView = rowLayout.findViewById(R.id.imageView)
-            val brickNameView: TextView = rowLayout.findViewById(R.id.brickName)
-            val brickCodeView: TextView = rowLayout.findViewById(R.id.brickCode)
-            val quantityInStoreView: TextView = rowLayout.findViewById(R.id.quantityInStore)
-            val quantityInSetView: TextView = rowLayout.findViewById(R.id.quantityInSet)
-            val plusButton: Button = rowLayout.findViewById(R.id.plusButton)
-            val minusButton: Button = rowLayout.findViewById(R.id.minusButton)
-
-            if (brick.image != null)
-                brickImageView.setImageBitmap(
-                    BitmapFactory.decodeByteArray(
-                        brick.image,
-                        0,
-                        brick.image!!.size
-                    )
-                )
-
-            brickNameView.text = brick.name
-            brickCodeView.text = brick.code
-            quantityInSetView.text = brick.quantityInSet.toString()
-            quantityInStoreView.text = brick.quantityInStore.toString()
-
-            plusButton.setOnClickListener {
-                val oldValue = quantityInStoreView.text.toString().toInt()
-                if (oldValue < 9998) {
-                    val newValue =
-                        (quantityInStoreView.text.toString().toInt() + 1).toString()
-                    quantityInStoreView.text = newValue
-
-                    dbHelper.openDatabase()
-                    dbHelper.updateInventoryPartQuantityInStore(brick.id, newValue)
-                    dbHelper.close()
-                }
-            }
-
-            minusButton.setOnClickListener {
-                val oldValue = quantityInStoreView.text.toString().toInt()
-                if (oldValue > 0) {
-                    val newValue =
-                        (quantityInStoreView.text.toString().toInt() - 1).toString()
-                    quantityInStoreView.text = newValue
-
-                    dbHelper.openDatabase()
-                    dbHelper.updateInventoryPartQuantityInStore(brick.id, newValue)
-                    dbHelper.close()
-                }
-            }
-
-            layout.addView(rowLayout)
-
-        }
         dbHelper.close()
+
+        val adapter = BricksListAdapter(this, R.layout.project_item_row, bricks)
+        this.listOfBricks.adapter = adapter
+    }
+
+    class BricksListAdapter(
+        context: Context?,
+        textViewResourceId: Int,
+        items: ArrayList<InventoryPartViewTO?>?
+    ) :
+        ArrayAdapter<InventoryPartViewTO?>(context!!, textViewResourceId, items!!) {
+
+        override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
+            val layoutInflater: LayoutInflater = LayoutInflater.from(context)
+            var convertedView = layoutInflater.inflate(R.layout.project_item_row, parent, false)
+
+            val brickImageView: ImageView = convertedView.findViewById(R.id.imageView)
+            val brickNameView: TextView = convertedView.findViewById(R.id.brickName)
+            val brickCodeView: TextView = convertedView.findViewById(R.id.brickCode)
+            val quantityInStoreView: TextView = convertedView.findViewById(R.id.quantityInStore)
+            val quantityInSetView: TextView = convertedView.findViewById(R.id.quantityInSet)
+            val plusButton: Button = convertedView.findViewById(R.id.plusButton)
+            val minusButton: Button = convertedView.findViewById(R.id.minusButton)
+
+            val brick: InventoryPartViewTO? = getItem(position)
+            if (brick != null) {
+                if (brick.image != null)
+                    brickImageView.setImageBitmap(
+                        BitmapFactory.decodeByteArray(
+                            brick.image,
+                            0,
+                            brick.image!!.size
+                        )
+                    )
+
+                val dbHelper = DataHelper(context)
+                brickNameView.text = brick.name
+                brickCodeView.text = brick.code
+                quantityInSetView.text = brick.quantityInSet.toString()
+                quantityInStoreView.text = brick.quantityInStore.toString()
+
+                plusButton.setOnClickListener {
+                    val oldValue = quantityInStoreView.text.toString().toInt()
+                    if (oldValue < 9998) {
+                        val newValue =
+                            (quantityInStoreView.text.toString().toInt() + 1).toString()
+                        quantityInStoreView.text = newValue
+
+                        dbHelper.openDatabase()
+                        dbHelper.updateInventoryPartQuantityInStore(brick.id, newValue)
+                        dbHelper.close()
+                    }
+                }
+
+                minusButton.setOnClickListener {
+                    val oldValue = quantityInStoreView.text.toString().toInt()
+                    if (oldValue > 0) {
+                        val newValue =
+                            (quantityInStoreView.text.toString().toInt() - 1).toString()
+                        quantityInStoreView.text = newValue
+
+                        dbHelper.openDatabase()
+                        dbHelper.updateInventoryPartQuantityInStore(brick.id, newValue)
+                        dbHelper.close()
+                    }
+                }
+            }
+            return convertedView
+        }
     }
 }

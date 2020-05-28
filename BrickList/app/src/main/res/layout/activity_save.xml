@@ -4,39 +4,87 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <EditText
-        android:id="@+id/saveFileName"
-        android:layout_width="220dp"
+    <TextView
+        android:id="@+id/textView1"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:ems="10"
-        android:inputType="textPersonName"
-        android:text="@string/filename"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:text="@string/save_file_as"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.502"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <EditText
-        android:id="@+id/email"
-        android:layout_width="220dp"
-        android:layout_height="wrap_content"
+        android:id="@+id/saveFileName"
+        android:layout_width="0dp"
+        android:layout_height="45dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
         android:ems="10"
-        android:inputType="textEmailAddress"
-        android:text="@string/email"
+        android:inputType="textPersonName"
+        android:text="@string/filename"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/textView1" />
+
+
+    <TextView
+        android:id="@+id/textView2"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:text="@string/limit_condition_to"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/saveFileName" />
 
+    <RadioGroup
+        android:id="@+id/conditionGroup"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="0dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginStart="16dp"
+        android:orientation="vertical"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/textView2">
+
+        <RadioButton
+            android:id="@+id/radioAny"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:checked="true"
+            android:text="@string/any" />
+
+        <RadioButton
+            android:id="@+id/radioNew"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/only_new" />
+
+        <RadioButton
+            android:id="@+id/radioUsed"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/only_used" />
+    </RadioGroup>
+
     <Button
         android:id="@+id/send"
-        android:layout_width="220dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
+        android:layout_width="0dp"
+        android:layout_height="48dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="16dp"
         android:background="@color/colorPrimary"
-        android:text="@string/send"
+        android:text="@string/save"
         android:theme="@style/AppTheme"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/email" />
+        app:layout_constraintTop_toBottomOf="@id/conditionGroup" />
 </androidx.constraintlayout.widget.ConstraintLayout>
