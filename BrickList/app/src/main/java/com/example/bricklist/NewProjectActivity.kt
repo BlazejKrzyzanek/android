@@ -32,7 +32,7 @@ class NewProjectActivity : AppCompatActivity() {
         return true
     }
 
-    fun showMainActivity() {
+    private fun showMainActivity() {
         val intent = Intent(this, MainActivity::class.java)
         startActivity(intent)
     }
@@ -87,7 +87,7 @@ class NewProjectActivity : AppCompatActivity() {
                     Toast.LENGTH_LONG
                 ).show()
 
-                if (result == "Downloaded") {
+                if (result.startsWith("Downloaded")) {
                     showMainActivity()
                 }
             }
@@ -181,7 +181,16 @@ class NewProjectActivity : AppCompatActivity() {
             if (parser.eventType == XmlPullParser.START_TAG) {
                 when (parser.name) {
                     "ITEMID" -> {
-                        inventoryPartTO.itemId = dbHelper.getItemId(parser.nextText())
+                        val itemIdXml = parser.nextText()
+                        inventoryPartTO.itemId = dbHelper.getItemId(itemIdXml)
+                        if (inventoryPartTO.itemId == -1)
+                            this.runOnUiThread {
+                                Toast.makeText(
+                                    this,
+                                    "Can't find element with id $itemIdXml in database",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
                     }
                     "QTY" -> {
                         inventoryPartTO.quantityInSet = parser.nextText().toInt()

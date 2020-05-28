@@ -13,7 +13,10 @@ import com.example.bricklist.database.BrickListContract.Inventories
 import com.example.bricklist.database.BrickListContract.InventoriesParts
 import com.example.bricklist.database.BrickListContract.ItemTypes
 import com.example.bricklist.database.BrickListContract.Parts
-import com.example.bricklist.database.model.*
+import com.example.bricklist.database.model.InventoryPartTO
+import com.example.bricklist.database.model.InventoryPartToExportTO
+import com.example.bricklist.database.model.InventoryPartViewTO
+import com.example.bricklist.database.model.InventoryTO
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
@@ -121,7 +124,10 @@ class DataHelper(private val context: Context) :
                 null
             )
         } else {
-            db.rawQuery("SELECT * FROM ${Inventories.TABLE_NAME}", null)
+            db.rawQuery(
+                "SELECT * FROM ${Inventories.TABLE_NAME} ORDER BY ${Inventories.LAST_ACCESSED} DESC",
+                null
+            )
         }
 
         if (cursor.moveToFirst()) {
@@ -172,6 +178,18 @@ class DataHelper(private val context: Context) :
         }
 
         return project
+    }
+
+    fun updateLastAccessedInventory(projectName: String?) {
+        val values = ContentValues()
+        values.put(Inventories.LAST_ACCESSED, System.currentTimeMillis())
+
+        db!!.update(
+            Inventories.TABLE_NAME,
+            values,
+            "${Inventories.NAME} = ?",
+            arrayOf(projectName)
+        )
     }
 
     fun addInventoryPart(inventoryPart: InventoryPartTO) {
@@ -264,7 +282,7 @@ class DataHelper(private val context: Context) :
         val resultInventoryPartList = ArrayList<InventoryPartViewTO?>()
         val cursor =
             db!!.rawQuery(
-                "SELECT InventoriesParts.ID, InventoryID, InventoriesParts.TypeID, InventoriesParts.ItemID, QuantityInSet, QuantityInStore, InventoriesParts.ColorID, Extra, Parts.Name, Parts.Code, Codes.Image FROM InventoriesParts JOIN Parts ON InventoriesParts.ItemID = Parts.id JOIN Codes ON Parts.id = Codes.ItemID AND InventoriesParts.ColorID = Codes.ColorID WHERE InventoryID = ?",
+                "SELECT InventoriesParts.ID, InventoryID, InventoriesParts.TypeID, InventoriesParts.ItemID, QuantityInSet, QuantityInStore, Codes.ColorID, Extra, Parts.Name, Codes.Code, Codes.Image FROM InventoriesParts JOIN Parts ON InventoriesParts.ItemID = Parts.id JOIN Codes ON Parts.id = Codes.ItemID AND InventoriesParts.ColorID = Codes.ColorID WHERE InventoriesParts.InventoryID = ?",
                 arrayOf(id.toString())
             )
         cursor.moveToFirst()
@@ -308,7 +326,7 @@ class DataHelper(private val context: Context) :
         return id
     }
 
-    fun getCodeFromParts(itemId: Int): String {
+    private fun getCodeFromParts(itemId: Int): String {
         var code = ""
         val cursor = db!!.rawQuery(
             "SELECT ${Parts.CODE} FROM ${Parts.TABLE_NAME} WHERE ${Parts.ID} = $itemId",
@@ -321,18 +339,6 @@ class DataHelper(private val context: Context) :
         }
         cursor.close()
         return code
-    }
-
-    fun addPart(Part: PartTO) {
-        val values = ContentValues()
-        values.put(Parts.ID, Part.id)
-        values.put(Parts.TYPE_ID, Part.typeId)
-        values.put(Parts.CODE, Part.code)
-        values.put(Parts.CATEGORY_ID, Part.categoryId)
-        values.put(Parts.NAME, Part.name)
-        values.put(Parts.NAME_PL, Part.namePL)
-
-        db!!.insert(Parts.TABLE_NAME, null, values)
     }
 
     fun getTypeId(IDString: String): Int {
@@ -416,46 +422,57 @@ class DataHelper(private val context: Context) :
         }
     }
 
-    fun downloadAndAddImage(itemID: Int, colorID: Int) {
+    fun downloadAndAddImage(itemID: Int, colorID: Int): ByteArray? {
         val code: Int = getBrickCodeForImage(itemID, colorID)
-        if (!ifImageExists(code)) {
-            val response = khttp.get(
-                url = "https://www.lego.com/service/bricks/5/2/$code"
-            )
-
-            if (response.statusCode == 200) {
-                addImage(code, response.content)
-            } else {
-                val secondTryResponse = khttp.get(
-                    url = "http://img.bricklink.com/P/$colorID/${getCodeFromParts(itemID)}.jpg"
+        try {
+            if (!ifImageExists(code)) {
+                val response = khttp.get(
+                    url = "https://www.lego.com/service/bricks/5/2/$code"
                 )
-                if (secondTryResponse.statusCode == 200) {
-                    addImage(code, secondTryResponse.content)
+                if (response.statusCode == 200) {
+                    addImage(code, response.content)
+                    return response.content
                 } else {
-                    val thirdTryResponse = khttp.get(
-                        url = "http://img.bricklink.com/P/$colorID/${getCodeFromParts(itemID)}.gif"
+                    val secondTryResponse = khttp.get(
+                        url = "http://img.bricklink.com/P/$colorID/${getCodeFromParts(itemID)}.jpg"
                     )
-                    if (thirdTryResponse.statusCode == 200) {
-                        addImage(code, thirdTryResponse.content)
+                    if (secondTryResponse.statusCode == 200) {
+                        addImage(code, secondTryResponse.content)
+                        return secondTryResponse.content
                     } else {
-                        val fourthTryResponse = khttp.get(
-                            url = "http://https://www.bricklink.com/PL/${getCodeFromParts(itemID)}.jpg"
+                        val thirdTryResponse = khttp.get(
+                            url = "http://img.bricklink.com/P/$colorID/${getCodeFromParts(itemID)}.gif"
                         )
-                        if (fourthTryResponse.statusCode == 200) {
-                            addImage(code, fourthTryResponse.content)
+                        if (thirdTryResponse.statusCode == 200) {
+                            addImage(code, thirdTryResponse.content)
+                            return thirdTryResponse.content
                         } else {
-                            val fifthTryResponse = khttp.get(
-                                url = "http://https://www.bricklink.com/MN/${getCodeFromParts(itemID)}.png"
+                            val fourthTryResponse = khttp.get(
+                                url = "http://https://www.bricklink.com/PL/${getCodeFromParts(itemID)}.jpg"
                             )
-                            if (fifthTryResponse.statusCode == 200) {
-                                addImage(code, fifthTryResponse.content)
+                            if (fourthTryResponse.statusCode == 200) {
+                                addImage(code, fourthTryResponse.content)
+                                return fourthTryResponse.content
+                            } else {
+                                val fifthTryResponse = khttp.get(
+                                    url = "http://https://www.bricklink.com/MN/${getCodeFromParts(
+                                        itemID
+                                    )}.png"
+                                )
+                                if (fifthTryResponse.statusCode == 200) {
+                                    addImage(code, fifthTryResponse.content)
+                                    return fifthTryResponse.content
+                                }
                             }
                         }
                     }
                 }
             }
-
+        } catch (e: Exception) {
+            return null
         }
+
+        return null
     }
 
     private fun addImage(code: Int, byteArray: ByteArray) {
@@ -471,58 +488,6 @@ class DataHelper(private val context: Context) :
         db!!.update(Codes.TABLE_NAME, values, "${Codes.CODE} = ?", arrayOf(code.toString()))
     }
 
-    fun getImageOfBrick(itemID: Int, colorID: Int): Bitmap? {
-        val code: Int = getBrickCodeForImage(itemID, colorID)
-
-        if (code != -1) {
-            val cursor = db!!.rawQuery(
-                "SELECT ${Codes.IMAGE} FROM ${Codes.TABLE_NAME} WHERE ${Codes.CODE} = ?",
-                arrayOf(code.toString())
-            )
-            val bMap: Bitmap
-
-            cursor.moveToFirst()
-
-            return if (cursor.getBlob(0) != null && cursor.getBlob(0).isNotEmpty()) {
-                bMap = BitmapFactory.decodeByteArray(cursor.getBlob(0), 0, cursor.getBlob(0).size)
-                cursor.close()
-                bMap
-            } else {
-                cursor.close()
-                null
-            }
-        } else {
-            return null
-        }
-    }
-
-    fun getNameOfBrick(itemID: Int, colorID: Int): String {
-        val cursorCode = db!!.rawQuery(
-            "SELECT ${Parts.CODE} FROM ${Parts.TABLE_NAME} WHERE ${Parts.ID} = ?",
-            arrayOf(itemID.toString())
-        )
-
-        val name: String
-
-        if (cursorCode.count > 0) {
-            cursorCode.moveToFirst()
-            val code: String = cursorCode.getString(0)
-
-            val cursorName = db!!.rawQuery(
-                "SELECT ${Parts.NAME} FROM ${Parts.TABLE_NAME} WHERE ${Parts.CODE} = ?",
-                arrayOf(code)
-            )
-            cursorName.moveToFirst()
-            name = cursorName.getString(0)
-            cursorName.close()
-        } else {
-            name = "Item ID = $itemID, ColorID = $colorID"
-        }
-
-        cursorCode.close()
-        return name
-    }
-
     fun deleteInventory(projectName: String?) {
         val cursor = db!!.rawQuery(
             "SELECT ${Inventories.ID} FROM ${Inventories.TABLE_NAME} WHERE ${Inventories.NAME} = ?",
@@ -536,7 +501,7 @@ class DataHelper(private val context: Context) :
 
             val secondCursor = db!!.rawQuery(
                 "SELECT ${InventoriesParts.ID} FROM ${InventoriesParts.TABLE_NAME} WHERE ${InventoriesParts.INVENTORY_ID} = ?",
-                null
+                arrayOf(id.toString())
             )
 
             if (secondCursor.moveToFirst()) {
@@ -547,13 +512,12 @@ class DataHelper(private val context: Context) :
                         "${InventoriesParts.ID} = ?",
                         arrayOf(partId.toString())
                     )
-                    secondCursor.close()
 
-                    cursor.moveToNext()
+                    secondCursor.moveToNext()
                 }
-
-                cursor.close()
+                secondCursor.close()
             }
+            cursor.close()
         }
     }
 }

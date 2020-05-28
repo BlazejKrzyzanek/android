@@ -4,13 +4,13 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
-import android.view.MotionEvent
 import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.preference.PreferenceManager
 import com.example.bricklist.database.DataHelper
+import kotlinx.android.synthetic.main.activity_main.*
 
 
 class MainActivity : AppCompatActivity() {
@@ -63,6 +63,12 @@ class MainActivity : AppCompatActivity() {
         val inventories = dbHelper.findAllInventories(showArchived)
         dbHelper.close()
 
+        if (inventories.isNotEmpty()) {
+            this.textView.visibility = View.GONE
+        } else {
+            this.textView.visibility = View.VISIBLE
+        }
+
         for (inventory in inventories) {
             val rowLayout = layoutInflater.inflate(R.layout.main_item_row, layout, false)
             val textView: TextView = rowLayout.findViewById(R.id.mainProjectName)
@@ -71,20 +77,6 @@ class MainActivity : AppCompatActivity() {
             }
 
             textView.text = inventory.name
-            rowLayout.setOnTouchListener { _, event ->
-                if (event.action == MotionEvent.ACTION_DOWN) {
-                    rowLayout.setBackgroundColor(
-                        resources.getColor(
-                            android.R.color.darker_gray,
-                            theme
-                        )
-                    )
-                }
-                if (event.action == MotionEvent.ACTION_UP) {
-                    resources.getColor(android.R.color.white, theme)
-                }
-                false
-            }
             layout.addView(rowLayout)
         }
     }

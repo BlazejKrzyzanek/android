@@ -26,5 +26,6 @@
     <string name="only_used">Only used</string>
     <string name="limit_condition_to">Limit condition to:</string>
     <string name="save_file_as">Save file as:</string>
+    <string name="your_list_is_empty_add_some_inventories_by_clicking_button">Your list is empty, add some inventories by clicking + button</string>
 
 </resources>

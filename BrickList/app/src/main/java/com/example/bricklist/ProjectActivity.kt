@@ -79,6 +79,15 @@ class ProjectActivity : AppCompatActivity() {
                 val intent = Intent(this, MainActivity::class.java)
                 startActivity(intent)
             }
+            R.id.action_unarchive -> {
+                val dbHelper = DataHelper(this)
+                dbHelper.openDatabase()
+                dbHelper.activateInventory(projectName!!)
+                dbHelper.close()
+
+                val intent = Intent(this, MainActivity::class.java)
+                startActivity(intent)
+            }
             android.R.id.home -> {
                 val intent = Intent(this, MainActivity::class.java)
                 startActivity(intent)
@@ -100,6 +109,7 @@ class ProjectActivity : AppCompatActivity() {
         val dbHelper = DataHelper(this)
         dbHelper.openDatabase()
         if (inventory == null) inventory = dbHelper.findInventoryByName(projectName)
+        dbHelper.updateLastAccessedInventory(projectName)
         val inventoryId = inventory!!.id
         val bricks = dbHelper.findInventoryPartsViews(inventoryId)
         dbHelper.close()
@@ -128,8 +138,10 @@ class ProjectActivity : AppCompatActivity() {
             val minusButton: Button = convertedView.findViewById(R.id.minusButton)
 
             val brick: InventoryPartViewTO? = getItem(position)
+            val dbHelper = DataHelper(context)
+
             if (brick != null) {
-                if (brick.image != null)
+                if (brick.image != null) {
                     brickImageView.setImageBitmap(
                         BitmapFactory.decodeByteArray(
                             brick.image,
@@ -137,8 +149,23 @@ class ProjectActivity : AppCompatActivity() {
                             brick.image!!.size
                         )
                     )
+                } else {
+                    DoAsync({
+                        dbHelper.openDatabase()
+                        brick.image = dbHelper.downloadAndAddImage(brick.itemId, brick.colorId)
+                        dbHelper.close()
+                    }, {
+                        if (brick.image != null)
+                            brickImageView.setImageBitmap(
+                                BitmapFactory.decodeByteArray(
+                                    brick.image,
+                                    0,
+                                    brick.image!!.size
+                                )
+                            )
+                    })
+                }
 
-                val dbHelper = DataHelper(context)
                 brickNameView.text = brick.name
                 brickCodeView.text = brick.code
                 quantityInSetView.text = brick.quantityInSet.toString()
@@ -150,6 +177,7 @@ class ProjectActivity : AppCompatActivity() {
                         val newValue =
                             (quantityInStoreView.text.toString().toInt() + 1).toString()
                         quantityInStoreView.text = newValue
+                        brick.quantityInStore = oldValue + 1
 
                         dbHelper.openDatabase()
                         dbHelper.updateInventoryPartQuantityInStore(brick.id, newValue)
@@ -163,6 +191,7 @@ class ProjectActivity : AppCompatActivity() {
                         val newValue =
                             (quantityInStoreView.text.toString().toInt() - 1).toString()
                         quantityInStoreView.text = newValue
+                        brick.quantityInStore = oldValue - 1
 
                         dbHelper.openDatabase()
                         dbHelper.updateInventoryPartQuantityInStore(brick.id, newValue)
