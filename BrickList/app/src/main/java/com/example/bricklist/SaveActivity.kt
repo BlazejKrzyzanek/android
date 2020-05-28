@@ -49,7 +49,8 @@ class SaveActivity : AppCompatActivity() {
             val filename = filenameView.text.toString()
 
             if (filename.isNotEmpty()) {
-                val filenameWithoutExtension = filename.split("\\.")[0]
+                val regex = Regex("([^\\w\\-. ]|\\.)+")
+                val filenameWithoutExtension = regex.replace(filename, "_")
 
                 val condition = when (radioGroup.checkedRadioButtonId) {
                     R.id.radioUsed -> {

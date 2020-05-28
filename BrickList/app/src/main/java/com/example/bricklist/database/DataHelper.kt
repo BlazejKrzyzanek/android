@@ -26,7 +26,7 @@ class DataHelper(private val context: Context) :
 
     companion object {
         private const val DB_NAME = "BrickList.db"
-        private const val DB_VERSION = 100
+        private const val DB_VERSION = 111
     }
 
     fun openDatabase() {
@@ -525,7 +525,7 @@ class DataHelper(private val context: Context) :
 
     fun deleteInventory(projectName: String?) {
         val cursor = db!!.rawQuery(
-            "SELECT ${Inventories.ID} FROM ${Inventories.TABLE_NAME} WHERE ${Inventories.NAME} LIKE \"?\"",
+            "SELECT ${Inventories.ID} FROM ${Inventories.TABLE_NAME} WHERE ${Inventories.NAME} = ?",
             arrayOf(projectName)
         )
 

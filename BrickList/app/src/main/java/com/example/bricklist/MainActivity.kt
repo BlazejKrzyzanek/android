@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
+import android.view.MotionEvent
 import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -70,12 +71,25 @@ class MainActivity : AppCompatActivity() {
             }
 
             textView.text = inventory.name
-
+            rowLayout.setOnTouchListener { _, event ->
+                if (event.action == MotionEvent.ACTION_DOWN) {
+                    rowLayout.setBackgroundColor(
+                        resources.getColor(
+                            android.R.color.darker_gray,
+                            theme
+                        )
+                    )
+                }
+                if (event.action == MotionEvent.ACTION_UP) {
+                    resources.getColor(android.R.color.white, theme)
+                }
+                false
+            }
             layout.addView(rowLayout)
         }
     }
 
-    fun openProject(view: View){
+    fun openProject(view: View) {
         val projectName = view.findViewById<TextView>(R.id.mainProjectName).text.toString()
 
         val intent = Intent(this, ProjectActivity::class.java)

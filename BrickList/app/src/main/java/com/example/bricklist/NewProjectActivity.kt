@@ -11,6 +11,7 @@ import androidx.preference.PreferenceManager
 import com.example.bricklist.database.DataHelper
 import com.example.bricklist.database.model.InventoryPartTO
 import com.example.bricklist.database.model.InventoryTO
+import kotlinx.android.synthetic.main.activity_new_project.*
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserFactory
 import java.io.ByteArrayInputStream
@@ -40,61 +41,60 @@ class NewProjectActivity : AppCompatActivity() {
         val projectNumberView: EditText = findViewById(R.id.projectNumber)
         val projectNameView: EditText = findViewById(R.id.projectName)
 
-        if (projectNameView.text.isNullOrEmpty()) {
-            Toast.makeText(
-                this,
-                "Project name cannot be empty!",
-                Toast.LENGTH_LONG
-            ).show()
+        this.progressBar.visibility = View.VISIBLE
+        this.buttonAdd.isEnabled = false
+        this.projectNumber.isEnabled = false
+        this.projectName.isEnabled = false
 
+        Thread(Runnable {
+            var result = ""
+            when {
+                projectNameView.text.isNullOrEmpty() -> {
+                    result = "Project name cannot be empty!"
+                }
+                projectNumberView.text.isNullOrEmpty() -> {
+                    result = "Project number cannot be empty!"
+                }
+                else -> {
+                    val dbHelper = DataHelper(this)
+                    dbHelper.openDatabase()
+                    val projectAlreadyExistsName =
+                        dbHelper.isInventoryWithNameInDatabase(projectNameView.text.toString())
+                    dbHelper.close()
 
-            return
-        }
-        if (projectNumberView.text.isNullOrEmpty()) {
-            Toast.makeText(
-                this,
-                "Project number cannot be empty!",
-                Toast.LENGTH_LONG
-            ).show()
+                    result = if (projectAlreadyExistsName) {
+                        "You've already created project with such name."
+                    } else {
+                        val task = BgTask()
+                        task.execute(
+                            projectNumberView.text.toString(),
+                            projectNameView.text.toString()
+                        )
 
-            return
-        }
+                        task.get(180, TimeUnit.SECONDS) + " '${projectNameView.text}'"
+                    }
+                }
+            }
 
-        val dbHelper = DataHelper(this)
-        dbHelper.openDatabase()
-        val projectAlreadyExistsName =
-            dbHelper.isInventoryWithNameInDatabase(projectNameView.text.toString())
-        dbHelper.close()
+            runOnUiThread {
+                this.progressBar.visibility = View.GONE
+                this.buttonAdd.isEnabled = true
+                this.projectNumber.isEnabled = true
+                this.projectName.isEnabled = true
+                Toast.makeText(
+                    this,
+                    result,
+                    Toast.LENGTH_LONG
+                ).show()
 
-        if (projectAlreadyExistsName) {
-            Toast.makeText(
-                this,
-                "You've already created project with such name.",
-                Toast.LENGTH_LONG
-            ).show()
-        } else {
-            val task = BgTask()
-            task.execute(projectNumberView.text.toString(), projectNameView.text.toString())
-
-            val result = task.get(150, TimeUnit.SECONDS)
-
-            Toast.makeText(
-                this,
-                result,
-                Toast.LENGTH_LONG
-            ).show()
-        }
+                if (result == "Downloaded") {
+                    showMainActivity()
+                }
+            }
+        }).start()
     }
 
     private inner class BgTask() : AsyncTask<String, Int, String>() {
-
-        override fun onPostExecute(result: String?) {
-            super.onPostExecute(result)
-
-            if (result.equals("Downloaded")) {
-                showMainActivity()
-            }
-        }
 
         override fun doInBackground(vararg p0: String?): String {
             val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(baseContext)
@@ -151,19 +151,17 @@ class NewProjectActivity : AppCompatActivity() {
 
         dbHelper.addInventory(inventory)
 
-        DoAsync({
-            for (part in inventoryParts) {
-                if (part.itemId != -1) {
-                    dbHelper.addInventoryPart(part)
-                    dbHelper.downloadAndAddImage(
-                        part.itemId,
-                        part.colorId
-                    )
-                }
+        for (part in inventoryParts) {
+            if (part.itemId != -1) {
+                dbHelper.addInventoryPart(part)
+                dbHelper.downloadAndAddImage(
+                    part.itemId,
+                    part.colorId
+                )
             }
-        },
-            { dbHelper.close() }
-        )
+        }
+
+        dbHelper.close()
     }
 
     private fun readItem(
