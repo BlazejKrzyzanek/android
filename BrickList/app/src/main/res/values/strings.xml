@@ -5,7 +5,7 @@
     <string name="title_activity_new_project">New project</string>
 
     <!-- Preferences -->
-    <string name="url_prefix">Prefix of URL</string>
+    <string name="url_prefix">URL prefix for inventories base</string>
     <string name="archive_title">Show archived</string>
     <string name="project_number">Project number</string>
     <string name="project_name">Project name</string>
@@ -15,5 +15,11 @@
     <string name="save">save</string>
     <string name="remove">remove</string>
     <string name="brickCountText">%d of %d</string>
+    <string name="archive">archive</string>
+    <string name="filename">Filename</string>
+    <string name="email">email</string>
+    <string name="send">SEND</string>
+    <string name="default_email">Default email address</string>
+    <string name="filenameAndEmail">Filename and email can\'t be empty.</string>
 
 </resources>

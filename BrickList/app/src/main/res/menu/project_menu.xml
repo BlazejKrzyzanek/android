@@ -11,6 +11,19 @@
         app:showAsAction="ifRoom" />
 
     <item
+        android:id="@+id/action_archive"
+        android:icon="@drawable/ic_archive_white_24dp"
+        android:title="@string/archive"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/action_unarchive"
+        android:icon="@drawable/ic_unarchive_white_24dp"
+        android:title="@string/archive"
+        android:visible="false"
+        app:showAsAction="ifRoom" />
+
+    <item
         android:id="@+id/action_remove"
         android:icon="@drawable/ic_delete_white_24dp"
         android:title="@string/remove"

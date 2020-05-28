@@ -8,9 +8,12 @@ import android.view.MenuItem
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import com.example.bricklist.database.DataHelper
+import com.example.bricklist.database.model.InventoryTO
 
 
 class ProjectActivity : AppCompatActivity() {
+
+    private var inventory: InventoryTO? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -27,6 +30,21 @@ class ProjectActivity : AppCompatActivity() {
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         val inflater = menuInflater
         inflater.inflate(R.menu.project_menu, menu)
+
+        if (inventory == null) {
+            val dbHelper = DataHelper(this)
+            dbHelper.openDatabase()
+            inventory = dbHelper.findInventoryByName(intent.getStringExtra("EXTRA_PROJECT_NAME"))
+            dbHelper.close()
+        }
+
+        if (inventory!!.active == 0) {
+            val archive = menu.findItem(R.id.action_archive)
+            archive.isVisible = false
+
+            val unarchive = menu.findItem(R.id.action_unarchive)
+            unarchive.isVisible = true
+        }
         return true
     }
 
@@ -34,11 +52,23 @@ class ProjectActivity : AppCompatActivity() {
         when (item.itemId) {
             R.id.action_save -> {
                 Toast.makeText(this, "SAVE", Toast.LENGTH_SHORT).show()
+
+                val intent = Intent(this, MainActivity::class.java)
+                startActivity(intent)
             }
             R.id.action_remove -> {
                 val dbHelper = DataHelper(this)
                 dbHelper.openDatabase()
                 dbHelper.deleteInventory(intent.getStringExtra("EXTRA_PROJECT_NAME"))
+                dbHelper.close()
+
+                val intent = Intent(this, MainActivity::class.java)
+                startActivity(intent)
+            }
+            R.id.action_archive -> {
+                val dbHelper = DataHelper(this)
+                dbHelper.openDatabase()
+                dbHelper.archiveInventory(intent.getStringExtra("EXTRA_PROJECT_NAME"))
                 dbHelper.close()
 
                 val intent = Intent(this, MainActivity::class.java)
@@ -67,8 +97,9 @@ class ProjectActivity : AppCompatActivity() {
         val dbHelper = DataHelper(this)
 
         dbHelper.openDatabase()
-        val inventoryId =
-            dbHelper.findInventoryByName(intent.getStringExtra("EXTRA_PROJECT_NAME")).id
+        if (inventory == null)
+            inventory = dbHelper.findInventoryByName(intent.getStringExtra("EXTRA_PROJECT_NAME"))
+        val inventoryId = inventory!!.id
         val bricks = dbHelper.findInventoryPartsViews(inventoryId)
         for (brick in bricks) {
             val rowLayout = layoutInflater.inflate(R.layout.project_item_row, layout, false)

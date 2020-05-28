@@ -147,12 +147,9 @@ class DataHelper(private val context: Context) :
     }
 
     fun isInventoryWithNameInDatabase(projectName: String): Boolean {
-        val query =
-            "SELECT * FROM ${Inventories.TABLE_NAME} WHERE ${Inventories.NAME} LIKE \"$projectName\""
-        val cursor = db!!.rawQuery(query, null)
-
+        val query = "SELECT * FROM ${Inventories.TABLE_NAME} WHERE ${Inventories.NAME} LIKE \"?\""
+        val cursor = db!!.rawQuery(query, arrayOf(projectName))
         val moveToFirst = cursor.moveToFirst()
-
         cursor.close()
 
         return moveToFirst
@@ -203,27 +200,27 @@ class DataHelper(private val context: Context) :
         db!!.insert(InventoriesParts.TABLE_NAME, null, values)
     }
 
-    fun activateInventory(id: Int) {
+    fun activateInventory(projectName: String) {
         val values = ContentValues()
         values.put(Inventories.ACTIVE, 1)
 
         db!!.update(
             Inventories.TABLE_NAME,
             values,
-            "${Inventories.ID} = ?",
-            arrayOf(id.toString())
+            "${Inventories.NAME} = ?",
+            arrayOf(projectName)
         )
     }
 
-    fun archiveInventory(id: Int) {
+    fun archiveInventory(projectName: String) {
         val values = ContentValues()
         values.put(Inventories.ACTIVE, 0)
 
         db!!.update(
             Inventories.TABLE_NAME,
             values,
-            "${Inventories.ID} = ?",
-            arrayOf(id.toString())
+            "${Inventories.NAME} = ?",
+            arrayOf(projectName)
         )
     }
 

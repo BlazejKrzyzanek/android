@@ -55,18 +55,19 @@ class MainActivity : AppCompatActivity() {
         layout.removeAllViews()
 
         val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this)
-        val showArchived = sharedPreferences.getBoolean("showArchived", false)
+        val showArchived = sharedPreferences.getBoolean("archive", false)
 
         val dbHelper = DataHelper(this)
         dbHelper.openDatabase()
-
         val inventories = dbHelper.findAllInventories(showArchived)
-
         dbHelper.close()
 
         for (inventory in inventories) {
             val rowLayout = layoutInflater.inflate(R.layout.main_item_row, layout, false)
             val textView: TextView = rowLayout.findViewById(R.id.mainProjectName)
+            if (inventory.active == 0) {
+                textView.setTextColor(resources.getColor(android.R.color.darker_gray, theme))
+            }
 
             textView.text = inventory.name
 
